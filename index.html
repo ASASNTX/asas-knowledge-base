@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASAS Employee Knowledge Base</title>
+<style>
+  :root {
+    --navy: #1F497D;
+    --blue: #2E75B5;
+    --blue-light: #D6E4F0;
+    --green-dark: #375623;
+    --green-light: #E2EFDA;
+    --rust: #843C0C;
+    --rust-light: #FCE4D6;
+    --grey-dark: #404040;
+    --grey-light: #EDEDED;
+    --white: #ffffff;
+    --bg: #F4F6F9;
+    --sidebar-w: 230px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: #222;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────────── */
+  #sidebar {
+    width: var(--sidebar-w);
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  #sidebar .logo {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  #sidebar .logo .org { font-size: 13px; font-weight: bold; color: #aac8e8; letter-spacing: .5px; }
+  #sidebar .logo .title { font-size: 15px; font-weight: bold; margin-top: 4px; line-height: 1.3; }
+
+  #sidebar nav { padding: 10px 0; flex: 1; }
+
+  #sidebar nav .section-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 16px;
+    background: none;
+    border: none;
+    color: #cde;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+  }
+  #sidebar nav .section-btn:hover { background: rgba(255,255,255,0.08); }
+  #sidebar nav .section-btn.active {
+    background: rgba(255,255,255,0.13);
+    border-left-color: #5EB8FF;
+    color: #fff;
+    font-weight: bold;
+  }
+  #sidebar nav .section-btn .num {
+    background: rgba(255,255,255,0.18);
+    border-radius: 50%;
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: bold; flex-shrink: 0;
+  }
+  #sidebar nav .section-btn.active .num { background: #5EB8FF; color: #000; }
+
+  /* ── MAIN ────────────────────────────────────────────────────── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ─────────────────────────────────────────────────── */
+  #topbar {
+    background: var(--white);
+    border-bottom: 2px solid var(--blue);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  #topbar h1 { font-size: 18px; color: var(--navy); flex: 1; }
+  #search {
+    padding: 7px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 13px;
+    width: 240px;
+    outline: none;
+    font-family: Arial, sans-serif;
+  }
+  #search:focus { border-color: var(--blue); box-shadow: 0 0 0 2px #d0e5f7; }
+
+  /* ── CONTENT ─────────────────────────────────────────────────── */
+  #content {
+    padding: 28px;
+    flex: 1;
+  }
+
+  .section-panel { display: none; }
+  .section-panel.active { display: block; }
+
+  .section-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 16px 22px;
+    border-radius: 8px 8px 0 0;
+    font-size: 17px;
+    font-weight: bold;
+    letter-spacing: .3px;
+  }
+  .section-subtitle {
+    background: var(--blue);
+    color: #fff;
+    padding: 7px 22px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    border-radius: 0 0 8px 8px;
+  }
+
+  /* ── BUCKET GRID ─────────────────────────────────────────────── */
+  .buckets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 900px) { .buckets { grid-template-columns: 1fr; } }
+
+  .bucket {
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  .bucket-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #fff;
+    cursor: pointer;
+    user-select: none;
+  }
+  .bucket-header .icon { font-size: 17px; }
+  .bucket-header .count {
+    margin-left: auto;
+    background: rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 1px 9px;
+    font-size: 12px;
+    font-weight: normal;
+  }
+  .bucket-header .chevron { font-size: 12px; transition: transform .2s; }
+  .bucket.collapsed .bucket-header .chevron { transform: rotate(-90deg); }
+
+  .bucket-systems .bucket-header   { background: #2E75B5; }
+  .bucket-documents .bucket-header { background: #375623; }
+  .bucket-sop .bucket-header       { background: #843C0C; }
+  .bucket-other .bucket-header     { background: #404040; }
+
+  .bucket-items { padding: 4px 0; }
+  .bucket.collapsed .bucket-items { display: none; }
+
+  .bucket-item {
+    display: flex;
+    gap: 10px;
+    padding: 9px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background .12s;
+  }
+  .bucket-item:last-child { border-bottom: none; }
+  .bucket-item:hover { background: #f8f9fb; }
+  .bucket-item .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .bucket-systems .dot   { background: #2E75B5; }
+  .bucket-documents .dot { background: #375623; }
+  .bucket-sop .dot       { background: #843C0C; }
+  .bucket-other .dot     { background: #707070; }
+
+  .bucket-item.hidden { display: none; }
+
+  .bucket-item a {
+    color: #1a56a0;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .bucket-item a:hover { text-decoration: underline; }
+
+  /* Highlight states for all bucket items */
+  .bucket-item { cursor: pointer; }
+  .bucket-item.highlight-green {
+    background: #d4edda !important;
+    border-left: 4px solid #28a745;
+  }
+  .bucket-item.highlight-yellow {
+    background: #fff9c4 !important;
+    border-left: 4px solid #f0c040;
+  }
+  .highlight-tag {
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 1px 7px;
+    margin-left: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tag-have  { background: #28a745; color: #fff; }
+  .tag-need  { background: #f0c040; color: #333; }
+
+
+  .bucket-legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 12px;
+    padding: 7px 14px;
+    background: #f0f4f8;
+    border-bottom: 1px solid #dde4ec;
+  }
+  .bucket-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+  }
+  .legend-dot.green  { background: #28a745; }
+  .legend-dot.yellow { background: #f0c040; }
+  .legend-hint { color: #777; font-style: italic; }
+
+  /* ── SEARCH HIGHLIGHT ─────────────────────────────────────────── */
+  mark { background: #fff176; border-radius: 2px; }
+
+  /* ── FOOTER ──────────────────────────────────────────────────── */
+  #footer {
+    text-align: center;
+    color: #999;
+    font-size: 11px;
+    padding: 14px;
+    border-top: 1px solid #e5e5e5;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────────────────────────────────── -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="org">AFTER-SCHOOL ALL-STARS</div>
+    <div class="title">Employee Knowledge Base</div>
+  </div>
+  <nav id="nav"></nav>
+</div>
+
+<!-- ── MAIN ─────────────────────────────────────────────────────────── -->
+<div id="main">
+  <div id="topbar">
+    <h1 id="topbar-title">Knowledge Base</h1>
+    <input id="search" type="text" placeholder="🔍  Search all sections…" oninput="onSearch(this.value)">
+    <button onclick="downloadShareable()" style="background:#1F497D;color:#fff;border:none;border-radius:20px;padding:7px 16px;font-size:13px;font-family:Arial,sans-serif;cursor:pointer;white-space:nowrap;" title="Generate a shareable version with all HAVE/NEED labels visible">📤 Share Labeled Version</button>
+  </div>
+  <div id="content"></div>
+  <div id="footer">ASAS Full-Time Employee Handbook · Updated 11/2018 v1 · Reorganized Knowledge Base</div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const sections = [
+  {
+    id: "hiring",
+    num: "1",
+    label: "Hiring",
+    subtitle: "Work authorization, background checks, hiring process, personnel records",
+    buckets: {
+      Systems: [
+        "Paylocity – employee self-service hub used for onboarding documents and record-keeping",
+        "Payroll / Paylocity / ADP – used for pay stub access and employee payroll data management",
+        "Verifyi – background check platform required for all employees; must be completed as part of onboarding (Fair Credit Reporting Act compliant)",
+        "IdentoGo – fingerprinting platform; separate additional step required only for employees who will work in DISD or LISD schools",
+        "I-9 / E-Verify – federal work-authorization verification system; completed as part of onboarding before employment begins",
+        "ASAS Email / Office 365 – issued to full-time staff only; must be set up prior to start date",
+        "OneDrive / SharePoint – cloud storage for ASAS documents; all new hire paperwork stored here",
+      ],
+      Documents: [
+        "Employment Application – candidates apply via Indeed (see separate Indeed Recruitment SOP); application data and candidate records are managed in Paylocity or the current HRIS",
+        "Offer Letter – generated and sent through Adobe Sign for e-signature; outlines position, salary, start date, and employment classification; signed copy stored in Paylocity / HRIS",
+        "Background Check Authorization Form – sent to all candidates via Adobe Sign for e-signature; routed to Verifyi; results saved in Paylocity / HRIS; must be cleared before onboarding is complete",
+        "IdentoGo Fingerprinting Authorization – separate additional form required only for employees assigned to DISD or LISD schools; processed through IdentoGo independently of Verifyi background check",
+        "Pre-Adverse / Adverse Action Notices – required FCRA notices if background check results affect hiring; tracked in Paylocity / HRIS",
+        "Personnel Record Paperwork – emergency contacts, tax forms (W-4), direct deposit, demographics; all collected and stored in Paylocity / HRIS",
+        "<a href='Request-for-Outside-Employment-Form.docx' target='_blank'>📎 Request for Outside Employment Form</a> – completed and stored in Paylocity / HRIS employee record",
+        "<a href='Conflict of Interest Disclosure.pdf' target='_blank'>📎 Conflict of Interest Disclosure</a> – stored in Paylocity / HRIS employee record; COO maintains master log",
+        "<a href='Consensual-Relationship-Agreement.docx' target='_blank'>📎 Consensual Relationship Agreement</a> – completed when two employees in a reporting relationship enter a personal relationship; stored in personnel file",
+        "<a href='workplace_personal_relationship_policy_02-10-2026.docx' target='_blank'>📎 Workplace Personal Relationship Policy (02-10-2026)</a> – ASAS policy governing personal relationships between employees",
+        "<a href='Workplace Personal Relationship Policy.pdf' target='_blank'>📎 Workplace Personal Relationship Policy (PDF)</a> – printable version of the personal relationship policy",
+        "<a href='Ask HR - How to Disclose a Romantic Relationship.pdf' target='_blank'>📎 Ask HR: How to Disclose a Romantic Relationship</a> – guidance document for employees navigating workplace relationship disclosures",
+        "<a href='Checklist-Utilizing-Independent-Contractors-Updated.docx' target='_blank'>📎 Checklist: Utilizing Independent Contractors (Updated)</a> – updated checklist for IRS/DOL criteria and contract requirements",
+        "Reference Check Notes – documented during hiring process; stored in Paylocity / HRIS candidate profile",
+        "<a href='Checklist-Utilizing-Independent-Contractors.docx' target='_blank'>📎 Checklist: Utilizing Independent Contractors</a> – use to verify IRS/DOL criteria, contract requirements, and compliance steps before engaging any independent contractor",
+        "<a href=\"connie's recs to get.docx\" target='_blank'>📎 Bank Access Authorization – Connie's Recommendations</a> – reference document for bank access sign-off and related approvals",
+      ],
+      SOP: [
+        "Step 1 – Operations Manager makes first contact with candidate and schedules an initial phone screening call",
+        "Step 2 – If candidate passes the phone screening, Operations Manager schedules a 30-minute virtual interview via Microsoft Teams with the applicable supervisors for the role",
+        "Step 3 – Virtual interview includes two staff members and is recorded; interview questions are pre-determined",
+        "Step 4 – If interviewers wish to move forward, they advise the Operations Manager, who requests 2 professional references from the candidate",
+        "Step 5 – Operations Manager contacts the provided references",
+        "Step 6 – The immediate supervisor for the role (same person who interviewed the candidate) calls to extend the verbal offer",
+        "Step 7 – Once the verbal offer is accepted, the Operations Manager sends the offer letter via Adobe Sign for e-signature",
+        "Step 8 – Once the signed offer letter is returned, a Paylocity profile is created and a welcome email is sent to the candidate; email includes a brief overview of onboarding steps and has the initial Verifyi background check attached — this is the first step in onboarding",
+        "Step 9 – The candidate's onboarding portal in Paylocity is activated; candidate has up to one week to complete all onboarding steps",
+        "Step 10 – Once the initial Verifyi background check results are returned, the candidate is sent their IdentoGo fingerprinting information; fingerprinting appointment must be scheduled within 4 days",
+        "Step 11 – Once the candidate has completed all Paylocity onboarding steps and cleared both Verifyi and IdentoGo fingerprinting, they are sent their SafeSchools online training; training must be completed within 4 days; completion certificate is saved to the employee's record in Paylocity / HRIS",
+        "Step 12 – Upon completion of all steps, the new hire is provided with 2 ASAS t-shirts in their preferred size and an ASAS badge",
+      ],
+      Other: [
+        "At-Will Employment – all employment is at-will; no agreement alters this without COO/Board President signature",
+        "Outside Employment Policy – permitted unless it creates conflict of interest, affects performance, or reflects poorly on ASAS",
+        "Personnel Record Updates – employees must notify HR of any changes to personal information",
+        "Postage Meter Usage – ASAS postage meter is for business use only; personal use prohibited",
+        "References – ASAS will provide employment references; details limited to position held and dates of employment",
+        "Relations Between Employees – romantic relationships between employees in a reporting relationship must be disclosed to HR; resolution required within 60 days",
+      ]
+    }
+  },
+  {
+    id: "intro",
+    num: "2",
+    label: "Introductory Period",
+    subtitle: "Onboarding, employment classifications, first 90 days",
+    buckets: {
+      Systems: [
+        "Paylocity – used to access onboarding materials, pay stubs, and HR communications during intro period",
+        "Paylocity Time & Attendance – non-exempt employees must record all hours from Day 1",
+        "SafeSchools Training Platform – all new hires complete required modules at afterschoolallstars.ca.safeschools.com/login",
+        "ASAS Email (Office 365) – primary communication system; must be set up on or before Day 1",
+        "OneDrive – new hire documents and ASAS policies stored here for employee access",
+      ],
+      Documents: [
+        "I-9 Form – completed as part of onboarding before employment begins; managed and stored in Paylocity / HRIS for compliance tracking",
+        "Employee Handbook – provided to all new hires; must be read before signing acknowledgement",
+        "Handbook Acknowledgement Form – signed by employee confirming receipt and understanding of handbook",
+        "90-Day Introductory Period Evaluation Form – completed by manager at end of introductory period",
+        "Offer Letter – outlines classification (Full-Time, Part-Time, Temporary) and introductory period terms",
+        "SafeSchools Training Completion Certificate – generated upon completion; saved to employee's record in Paylocity / HRIS",
+        "Adult/Student Interaction Acknowledgement – signed before any interaction with students",
+        "Technology Agreement – signed during onboarding; covers acceptable use of ASAS-issued technology, reporting requirements for technical issues, and damage policy outlining employee responsibility for damage to ASAS equipment",
+      ],
+      SOP: [
+        "Day 1 – HR conducts orientation: tour, introductions, system setup, handbook review; note: I-9 is completed during onboarding before employment begins, not on Day 1",
+        "Week 1 – Supervisor reviews job responsibilities, performance expectations, and work schedule",
+        "Days 1–30 – New hire completes all required SafeSchools training modules (all staff), or before first student contact (program staff)",
+        "Day 30 – Supervisor checks in on progress; coaching begins if performance gaps are identified",
+        "Day 60 – Mid-point check-in; supervisor documents any concerns in writing and shares with HR",
+        "Day 90 – Formal 90-day evaluation completed and signed by employee and manager; filed in personnel record",
+        "Intro Period Extension – COO may extend the introductory period if 90 days are insufficient",
+        "Intro Period Failure – if employee does not meet standards, HR and COO determine termination or extension",
+        "Leave During Intro Period – if a leave is taken, introductory period is extended by the length of the leave",
+      ],
+      Other: [
+        "Mission – ASAS provides comprehensive after-school programs that keep children safe and help them succeed in school and life",
+        "Vision – All-Stars are safe and healthy, graduate high school, go to college, find careers they love, and give back to their communities",
+        "Core Values – Proactive, Entrepreneurial, Transparent, Accountable, Collaborative",
+        "Employment Classifications – Introductory, Regular Full-Time (40+ hrs/wk), Regular Part-Time (<40 hrs/wk), Temporary (up to 120 days)",
+        "At-Will Employment – either party may end employment at any time, with or without cause or notice",
+        "Open Door Policy – employees encouraged to raise concerns directly with supervisor; HR also available at hr@afterschoolallstars.org",
+        "On Notice Policy – employees must report conduct that could jeopardize a safe working environment to HR at hr@afterschoolallstars.org",
+        "Benefits Eligibility – regular full-time employees become eligible for benefits on the 1st of the month following start date",
+        "Day 1 Office Orientation – acronyms used at ASAS will be reviewed on Day 1 along with office policies including keys, building access, and parking",
+      ]
+    }
+  },
+  {
+    id: "time",
+    num: "3",
+    label: "Time / Attendance / Payroll",
+    subtitle: "Scheduling, timekeeping, compensation, benefits, and leaves",
+    buckets: {
+      Systems: [
+        "Paylocity Time & Attendance – primary timekeeping system; all non-exempt employees log hours daily; supervisors approve time logs",
+        "Paylocity – central portal for time & attendance, pay stubs, and PTO balances",
+        "Paylocity Self-Service – employees access electronic pay stubs each pay period via Paylocity",
+        "ASAS Credit Card Portal – used by select employees for approved business expenses; managed by Operations Manager",
+        "Google Maps / Mileage Tool – required for calculating and documenting mileage reimbursement requests",
+        "Benefits Portal – accessed at orientation; used to enroll in medical, dental, vision, and retirement plans",
+      ],
+      Documents: [
+        "Time Log / Timecard – non-exempt employees record and certify hours each pay period in Paylocity",
+        "<a href='ASAS Holidays 2026.pdf' target='_blank'>📎 ASAS 2026 Holiday Calendar</a> – official HR-issued list of all observed holidays for 2026 including Winter Break dates",
+        "<a href='Please_DocuSign_CREDIT_CARD_Agreement_v4 - Connie.pdf' target='_blank'>📎 ASAS Employee Credit Card Agreement</a> – signed via DocuSign by all employees issued a corporate credit card; outlines terms, responsibilities, and safekeeping requirements",
+        "<a href='ASAS Fiscal Policies FY25 2-5-25.pdf' target='_blank'>📎 ASAS Fiscal Policies FY25</a> – governing document for all financial policies and procedures; updated January 2025",
+        "<a href='Paid-time-off-leave-request.docx' target='_blank'>📎 PTO Leave Request Form</a> – submitted in writing to supervisor for requests of 3+ days; must be approved before use",
+        "<a href='Paid-Time-Off-with-Accrual-and-Carryover-Provisions.docx' target='_blank'>📎 PTO Policy with Accrual & Carryover Provisions</a> – full PTO policy document including accrual rates and carryover rules",
+        "<a href='Overtime-Authorization-Form.docx' target='_blank'>📎 Overtime Authorization Form</a> – non-exempt employees must receive written supervisor approval before working overtime",
+        "Mileage Reimbursement Form – submitted within 30 days of travel with Google Maps printout",
+        "<a href='Travel-Expense-Policy.docx' target='_blank'>📎 Travel Expense Policy</a> – full ASAS travel expense policy and reimbursement guidelines",
+        "<a href='Travel-Policy-Nonexempt-Employees.docx' target='_blank'>📎 Travel Policy – Non-Exempt Employees</a> – travel rules and reimbursement guidelines specific to non-exempt staff",
+        "<a href='Travel-Policy-Executive-Employees.docx' target='_blank'>📎 Travel Policy – Executive Employees</a> – travel rules and reimbursement guidelines specific to executive staff",
+        "Cell Phone Reimbursement Request – submitted any time during fiscal year; approved by department head and COO",
+        "Travel Pre-Approval Form – required before booking any ASAS business travel",
+        "Benefits Enrollment Forms – completed at orientation; submitted to HR within enrollment window",
+        "<a href='Leave-Donation-Policy.docx' target='_blank'>📎 Leave Donation Policy</a> – ASAS policy for donating PTO to colleagues in need",
+        "<a href='Leave Donation Policy.pdf' target='_blank'>📎 Leave Donation Policy (PDF)</a> – printable version of the leave donation policy",
+        "<a href='Leave-Donation-Request.docx' target='_blank'>📎 Leave Donation Request Form</a> – completed by both donor and recipient employees",
+        "<a href='How to Create a Leave Donation Program.pdf' target='_blank'>📎 How to Create a Leave Donation Program</a> – reference guide for administering the leave donation program",
+        "<a href='Leave-of-Absence-Approval-Letter.docx' target='_blank'>📎 Leave of Absence Approval Letter</a> – template issued to employees when a leave request is approved",
+        "<a href='Leave-of-Absence-Denial-Letter-Non-FMLA.docx' target='_blank'>📎 Leave of Absence Denial Letter (Non-FMLA)</a> – template issued when a non-FMLA leave request is denied",
+        "<a href='Critical-Personal-Leave-of-Absence-Policy.docx' target='_blank'>📎 Critical Personal Leave of Absence Policy</a> – ASAS policy for critical personal leave situations",
+        "<a href='FMLA Employee Request Form.docx' target='_blank'>📎 FMLA Employee Request Form</a> – completed by employee when requesting FMLA leave",
+        "<a href='FMLA-Checklist-Individual-Leave-Request.docx' target='_blank'>📎 FMLA Checklist – Individual Leave Request</a> – HR checklist for processing individual FMLA leave requests",
+        "<a href='Military-Leave-of-Absence-Policy.docx' target='_blank'>📎 Military Leave of Absence Policy</a> – ASAS policy for military leave in accordance with USERRA",
+        "<a href='Managing Military Leave and Military Family Leave.pdf' target='_blank'>📎 Managing Military Leave and Military Family Leave</a> – reference guide for administering military leave",
+        "<a href='How to Administer Military Leave Benefits Under USERRA.pdf' target='_blank'>📎 How to Administer Military Leave Benefits Under USERRA</a> – compliance guide for USERRA military leave administration",
+        "Short-Term Disability Claim Form – filed when employee qualifies for disability leave benefits",
+      ],
+      SOP: [
+        "Timekeeping (Non-Exempt) – clock in/out daily in Paylocity; supervisor corrects errors within same pay period; time rounded to nearest quarter-hour",
+        "Absence Notification – employee contacts supervisor at least 3 hours before shift start; notifies each day of absence",
+        "Overtime Approval – employee requests written authorization from supervisor before working overtime",
+        "Payroll Error Correction – employee reports discrepancy to supervisor within 30 days; HR corrects in next pay cycle",
+        "Overpayment Recovery – HR deducts from next paycheck (with written authorization) or issues repayment agreement if employee has separated",
+        "PTO Request Process – submit written request to supervisor as early as possible; requests of 3+ days require written submission; approval is not automatic",
+        "Mileage Reimbursement Process – complete form with Google Maps documentation within 30 days; subtract normal commute mileage",
+        "Travel Booking Process – get supervisor approval → book lowest reasonable fare → submit pre-approval form → ASAS pre-pays hotel for trips 50+ miles from home/office",
+        "Cell Phone Reimbursement Process – submit request → department head and COO approve → added to paycheck",
+        "Benefits Enrollment – HR presents options at orientation; forms completed within enrollment period; changes at open enrollment or qualifying life event only",
+        "COBRA Notification – HR sends written notice within required timeline upon qualifying event",
+        "Leave Request Process – submit written request to supervisor as soon as practicable; supervisor approves; HR notified; benefit continuation reviewed",
+      ],
+      Other: [
+        "Payday Schedule – every other Friday; covers two-week period ending the previous Saturday",
+        "Work Hours (Non-Exempt) – Monday–Friday, 9 AM–6 PM; 30–60 min unpaid meal break; 10-min paid break per 4-hour block",
+        "Compensation Policy – salary administration reviewed annually; performance-based increases tied to goal achievement and overall appraisal; HR may approve exceptions",
+        "Overtime Rate – 1.5x regular rate for hours over 40/week (non-exempt); Texas follows federal FLSA; no daily overtime requirement under Texas law",
+        "Texas Payday Law – ASAS must pay wages at least twice monthly or every two weeks; involuntary terminations require final paycheck within 6 calendar days; voluntary resignations paid on next regular payday",
+        "PTO Accrual – 0–3 years: 18 days/yr; 3–5 years: 23 days/yr; 5+ years: 28 days/yr; accrual suspended during leave",
+        "PTO Payout on Termination – Texas does not require PTO payout on separation unless ASAS policy or employment agreement specifies; negative balance deducted from final paycheck with written authorization",
+        "Holiday Schedule – see 2026 Holiday Calendar; includes MLK Day, Presidents Day, Cesar Chavez Day, Memorial Day, Juneteenth, Independence Day, Labor Day, Indigenous Peoples Day, Veterans Day, Thanksgiving (3 days), Winter Holiday (Dec 24–Jan 1)",
+        "Remote Work Policy – available case-by-case with supervisor approval; non-exempt remote workers must record all hours in Paylocity",
+        "Parental Leave – 6 weeks paid for birth, adoption, or foster placement after 12 months of full-time service; runs concurrent with federal FMLA",
+        "FMLA (Federal) – up to 12 weeks unpaid per 12-month period; requires 1 yr tenure, 1,250 hrs worked, and 50+ employees within 75 miles; Texas has no state-level equivalent",
+        "Bereavement Leave – up to 5 paid days for immediate family; 1 paid day for extended family",
+        "Jury / Witness Duty – Texas prohibits discharge for jury service; ASAS provides up to 5 paid days per calendar year; additional days unpaid or using accrued PTO",
+        "Voting Leave – Texas requires employers to provide paid time off to vote in public elections if employee does not have 2 hours free from work before or after polls open/close",
+        "Discretionary Benefits – ASAS offers medical insurance, PTO, holiday time, retirement plan, parental leave, short-term disability, and life blend (flex time); see Benefits Portal for plan documents",
+        "Leaves of Absence – all leaves (FMLA, parental, military, personal, bereavement, jury, voting, school visit) governed by ASAS policy and applicable federal law; Texas has no additional mandated leaves beyond federal requirements",
+        "Military Leave – governed by federal USERRA; employees returning from military leave reinstated if they meet USERRA requirements; Texas additionally provides job protection under state law",
+        "Reimbursement and Travel Policies – ASAS reimburses employees for reasonable and necessary pre-approved business expenses; all reimbursement requests must be submitted within 30 days with itemized receipts; travelers must seek the lowest reasonable costs and avoid impropriety",
+        "Travel Meal Per Diem – up to $50/day; individual meals should not exceed $20/person; no alcohol reimbursement",
+        "Hotel Cap – over $250/night requires dept head approval (trips under $1,000) or COO approval (trips over $1,000)",
+      ]
+    }
+  },
+  {
+    id: "performance",
+    num: "4",
+    label: "Performance & Training",
+    subtitle: "Evaluations, PIPs, training requirements, child safety",
+    buckets: {
+      Systems: [
+        "SafeSchools Training Platform – required training completed at afterschoolallstars.ca.safeschools.com/login; supervisors track completion",
+        "Paylocity – performance evaluations and PIP documentation stored and accessed through HR",
+        "ASAS Email (Office 365) – used to communicate feedback, training assignments, and PIP updates",
+        "Child Welfare Information Gateway – childwelfare.gov – reference for state-specific child abuse reporting laws",
+      ],
+      Documents: [
+        "<a href='Performance-Appraisal-Interim-Evaluation.docx' target='_blank'>📎 Performance Appraisal – Interim Evaluation Form</a> – used for mid-year review; completed at end of 90-day intro period and mid-year; signed by employee and manager",
+        "<a href='PIP-Template-Form-2025.docx' target='_blank'>📎 Performance Improvement Plan (PIP) Template</a> – formal written plan for employees not meeting standards; includes goals, timeline, and accountability measures",
+        "SafeSchools Training Completion Certificate – generated upon completion; saved to employee's record in Paylocity / HRIS",
+        "Adult/Student Interaction Policy – signed acknowledgement kept in employee personnel file before any student contact",
+        "Child Abuse Acknowledgement Form – signed by all staff; stored in personnel file",
+        "Incident Report Form – completed by staff within 24 hours of any suspected child abuse report filed with authorities",
+        "<a href='workplacebullyingpolicy20250911.docx' target='_blank'>📎 Workplace Bullying Policy (2025)</a> – ASAS official policy on workplace bullying; updated September 2025",
+        "<a href='Workplace Bullying and Harassment - Whats the Difference.pdf' target='_blank'>📎 Workplace Bullying vs. Harassment: What's the Difference?</a> – reference guide distinguishing bullying from harassment",
+        "<a href='presentationsPPT-Confronting-Bullying-Training.pptx' target='_blank'>📎 Confronting Bullying – Training Presentation</a> – PowerPoint training used for staff anti-bullying training sessions",
+        "Workplace Bullying Complaint Form – submitted to HR at hr@afterschoolallstars.org with documented dates and details",
+      ],
+      SOP: [
+        "90-Day Performance Review – manager completes evaluation form, reviews with employee, both sign; filed in personnel record",
+        "Annual Performance Review – conducted twice per year: a mid-year review to assess progress against goals and address any performance concerns, and a year-end review that includes goal review, career development discussion, and salary review eligibility",
+        "PIP Process – Step 1: Supervisor identifies gap; Step 2: HR consulted; Step 3: PIP drafted with goals/timeline; Step 4: Employee and manager sign; Step 5: Progress reviewed at milestones; Step 6: HR determines outcome (success, extension, or termination)",
+        "SafeSchools Training (Program Staff) – must complete all required modules before first student contact",
+        "SafeSchools Training (All Other Staff) – must complete all required modules within 30 days of hire",
+        "Child Abuse Reporting (8 Steps) – Step 1: Staff notifies supervisor immediately; Step 2: Supervisor informed of all findings; Step 3: Site Coordinator informs Executive Director who notifies HR; Step 4: Exec Dir determines whether to report; Step 5: Program Manager files report same day (within 24 hrs); Step 6: Staff notifies supervisor after report filed; Step 7: Exec Dir notifies school principal; Step 8: No follow-up questions to student—document any additional disclosures",
+        "Harassment/Bullying Complaint – employee reports to hr@afterschoolallstars.org or Exec Committee member; COO or designee investigates; discipline may include counseling, warning, suspension, or termination",
+      ],
+      Other: [
+        "Performance Evaluations Policy – ASAS conducts a formal 90-day evaluation at the end of the introductory period, followed by a mid-year review and a year-end annual review thereafter; all evaluations are signed by both employee and manager and retained in the personnel file; unsatisfactory evaluations may result in a PIP or termination",
+        "Performance Standards – all employees must follow handbook standards; ASAS may discipline up to termination at any time",
+        "Unacceptable Conduct (Non-Exhaustive) – includes harassment, excessive absenteeism, record falsification, weapons/drugs on premises, insubordination, misuse of funds, unauthorized overtime, failure to report child abuse",
+        "Workplace Bullying – repeated inappropriate behavior (verbal, physical, gestural, exclusion) is prohibited regardless of intent; violations may result in termination",
+        "Probationary Status – employees on PIP are not eligible for salary increases",
+        "Evaluations on Leave – annual evaluation and bonus determination postponed until employee returns from leave",
+        "Staff/Student Interaction Rules – staff must never be alone with a single student; physical contact limited to shoulder level and above; no social media connections with participants under 18; phone use on school sites limited to ASAS business",
+        "Salary Increases – performance-based; tied to goal achievement and overall appraisal; HR may approve exceptions",
+      ]
+    }
+  },
+  {
+    id: "offboarding",
+    num: "5",
+    label: "Offboarding",
+    subtitle: "Voluntary resignation, involuntary termination, COBRA, final pay",
+    buckets: {
+      Systems: [
+        "Paylocity – employee access ends upon separation; final pay stub available through end of access window",
+        "COBRA Enrollment System – eligible departing employees receive written COBRA notice with enrollment instructions",
+        "IT / Office 365 – all ASAS data removed from personal devices upon termination; ASAS accounts deactivated immediately",
+        "Paylocity Time & Attendance – final timecard must be approved and certified before last day",
+        "Background Check / Personnel File System – file retained per ASAS record retention policy after separation",
+      ],
+      Documents: [
+        "Resignation Letter / Separation Notice – written notice from employee (recommended 2 weeks) or written notice from ASAS upon involuntary termination",
+        "<a href='Exit-Interview-Questions.docx' target='_blank'>📎 Exit Interview Questions</a> – standard questions used during exit interviews",
+        "<a href='Employee-Survey-Exit-Interview.docx' target='_blank'>📎 Employee Exit Survey</a> – survey completed by departing employee to provide structured feedback",
+        "<a href='Termination-Documentation-Form.docx' target='_blank'>📎 Termination Documentation Form</a> – completed by HR and manager to document all termination details",
+        "<a href='Involuntary Termination of Employment Policy.pdf' target='_blank'>📎 Involuntary Termination of Employment Policy</a> – ASAS policy governing involuntary separations",
+        "<a href='Involuntary Termination of Employment in the United States.pdf' target='_blank'>📎 Involuntary Termination of Employment in the United States</a> – reference guide on legal requirements for involuntary terminations",
+        "Final Timecard / Pay Certification – non-exempt employees must certify final hours before last day",
+        "COBRA Notice – sent by HR within required timeline after qualifying event; outlines continuation coverage and costs",
+        "Return of Property Checklist – employee must return all ASAS property (laptop, phone, keys, access cards, name tags, uniforms, documents) before final departure",
+        "Final Expense Reimbursement Form – any outstanding expense reports submitted before final paycheck",
+        "Separation Agreement (if applicable) – used in certain involuntary separations; reviewed by COO before issuance",
+        "Payroll Deduction Authorization (if applicable) – signed if employee has a negative PTO balance or outstanding advances",
+      ],
+      SOP: [
+        "Voluntary Resignation – Step 1: Employee provides written notice (2 weeks recommended) to supervisor and HR; Step 2: HR acknowledges and confirms last day; Step 3: Supervisor creates transition plan; Step 4: IT notified to begin off-boarding; Step 5: Employee returns all ASAS property on/before last day; Step 6: HR conducts or schedules exit interview; Step 7: Final paycheck issued on next regular payday",
+        "Involuntary Separation – Step 1: HR and COO document grounds; Step 2: Manager and HR meet with employee; Step 3: Termination paperwork issued; Step 4: IT deactivates all access immediately; Step 5: Employee returns all ASAS property; Step 6: COBRA notice sent within required timeline",
+        "Job Abandonment – 2 consecutive days absent without notice, or twice in any 6-month period without notification → ASAS processes voluntary separation",
+        "COBRA Process – HR sends written notice within required period; employee has 60 days to elect coverage; coverage backdated to separation date if elected",
+        "Final Paycheck – under Texas Payday Law: involuntary terminations must be paid within 6 calendar days; voluntary resignations paid on next regular payday; includes all earned wages",
+        "Return of Property – all items (laptop, phone, keys, access cards, uniforms, tools, documents) returned to supervisor before final departure",
+        "PTO Payout on Separation – Texas does not require PTO payout on termination; negative PTO balance deducted from final paycheck with written authorization",
+        "Personal Device Inspection – upon termination, employee may be asked to produce personal device; all ASAS data wiped by IT",
+      ],
+      Other: [
+        "Notice Recommendation – employees are encouraged to give at least 2 weeks' notice",
+        "At-Will Reminder – either party may end employment at any time, with or without cause or notice",
+        "Benefit Continuation – health, dental, and vision may be continued at employee's expense under COBRA",
+        "PTO Accrual Stops – accrual suspended during any leave and permanently upon separation",
+        "Rehire Eligibility – former employees with a break in service of more than 90 days are treated as new hires if rehired",
+        "Handbook Acknowledgement – employees sign acknowledgement confirming they have read and understood the handbook; kept in personnel file",
+      ]
+    }
+  },
+  {
+    id: "general",
+    num: "6",
+    label: "General Policies",
+    subtitle: "Harassment, social media, technology, confidentiality, safety, and compliance",
+    buckets: {
+      Systems: [
+        "ASAS Email (Office 365) – primary communication platform; monitored by ASAS; no expectation of privacy",
+        "OneDrive – all ASAS documents must be stored on OneDrive; deleted files retained in recycle bin for 90 days",
+        "ASAS Laptop / Technology Equipment – issued to select employees; remains ASAS property; returned upon separation",
+        "Bulletin Board – physical boards in ASAS offices; HR-approved postings only; contains required law notices",
+        "DHS / ICE / CBP Websites – reference portals for immigration enforcement reporting (dhs.gov, ice.gov, cbp.gov)",
+        "Social Media Platforms – personal and professional use subject to ASAS Social Media Policy at all times",
+        "Child Welfare Information Gateway – childwelfare.gov – reference for state-specific child abuse reporting requirements",
+      ],
+      Documents: [
+        "Social Media Policy Acknowledgement – all employees must understand and comply; included in handbook",
+        "Confidentiality Agreement – ASAS may require signed agreements as a condition of employment",
+        "FERPA Compliance Records – student data handled per FERPA requirements; parent consent forms on file",
+        "<a href='Conflict of Interest Disclosure.pdf' target='_blank'>📎 Conflict of Interest Disclosure Form</a> – required for any actual or potential conflict; COO maintains records",
+        "<a href='Gift-Acceptance-Policy.docx' target='_blank'>📎 Gift Acceptance Policy</a> – ASAS policy governing acceptance of gifts by employees and board members",
+        "<a href='How to Conduct a Workplace Investigation.pdf' target='_blank'>📎 How to Conduct a Workplace Investigation</a> – HR reference guide for conducting internal workplace investigations",
+        "Technology Use Agreement – covers laptop, Office 365, OneDrive, email, and personal device use for work",
+        "<a href='License Agreement - Schedule A.pdf' target='_blank'>📎 License Agreement – Schedule A</a> – Marketing, communications, trademark, and branding guidelines for ASAS chapters",
+        "<a href='License Agreement - Schedule B.pdf' target='_blank'>📎 License Agreement – Schedule B</a> – ASAS program requirements and program model standards all chapters must comply with",
+        "<a href='License Agreement - Schedule C.pdf' target='_blank'>📎 License Agreement – Schedule C</a> – Coordinated information sharing and reporting requirements for the ASAS network",
+        "<a href='ASAS Fiscal Policies FY25 2-5-25.pdf' target='_blank'>📎 ASAS Fiscal Policies FY25</a> – governing document for all financial policies and procedures; updated January 2025",
+        "Harassment Complaint Form – submitted to HR (hr@afterschoolallstars.org) with dates, details, and witnesses",
+        "Whistleblower Report – written complaint submitted to COO or Exec Committee member",
+        "Gift Disclosure Form – gifts over $50 (staff) or $150 (management) disclosed in writing to supervisor; COO maintains records",
+        "Workplace Search Consent – ASAS may search desks, files, lockers, and email at any time; employees notified upon hire",
+        "Immigration Enforcement Response Log – documented record of any enforcement actions at ASAS sites",
+      ],
+      SOP: [
+        "Open Door Policy – employees are encouraged to raise concerns directly with their supervisor; if unresolved, concerns may be escalated to HR at hr@afterschoolallstars.org",
+        "Expected Standards of Conduct – all employees must observe handbook policies and maintain professional conduct at all times; ASAS may impose discipline up to and including termination for violations",
+        "Inspections of Desks, Packages, and Briefcases – ASAS reserves the right to inspect personal belongings, desks, files, lockers, and ASAS-owned equipment at any time without prior notice; searches must be authorized by COO or designee and conducted by a supervisor or designated security personnel",
+        "Acceptance of Gifts – SOP: employee identifies gift above threshold → reports in writing to supervisor → supervisor reviews and instructs in writing → COO maintains records; four exceptions apply (friendship gifts under $50/$150, kinship gifts, civic awards, standard discounts)",
+        "General Safety Guidelines – all employees must report accidents and injuries to supervisor immediately; report hazardous conditions promptly; ASAS maintains workers' compensation coverage; Texas does not require private employers to carry workers' comp but ASAS provides coverage",
+        "Incident and Accident Reporting – Step 1: Employee reports any injury or accident to supervisor immediately, regardless of severity; Step 2: Supervisor reports to HR within 24 hours; Step 3: HR files workers' compensation claim as required; Step 4: Incident report completed and retained on file",
+        "Transporting Students – employees may not transport students in personal vehicles without prior written approval from ASAS leadership; all student transportation must comply with ASAS safety protocols and applicable Texas law",
+        "Violence in the Workplace – any threats, acts of violence, or possession of weapons on ASAS property must be reported to supervisor and HR immediately; ASAS will involve law enforcement as appropriate; violations result in immediate termination",
+        "Harassment / Discrimination Complaint – Step 1: Employee reports to hr@afterschoolallstars.org or Texas Workforce Commission Civil Rights Division (TWC-CRD); Step 2: COO or designee investigates promptly; Step 3: All facts and circumstances considered; Step 4: Outcome communicated to complainant and accused; Step 5: Discipline issued if warranted; false bad-faith complaints may also result in discipline",
+        "Immigration Enforcement Response – Step 1: Do not allow ICE/CBP into non-public areas without valid warrant; Step 2: Document agent names, badge numbers, and approval documents; Step 3: If no warrant, call local police immediately; Step 4: HR notifies affected employee within 72 hrs of inspection notice; Step 5: HR provides inspection results within 72 hrs of receiving from ICE; Step 6: Employees may file complaints via dhs.gov, CBP Center (1-877-227-5511), or ICE ERO (888-351-4024)",
+        "Whistleblower Report Process – employee submits written complaint to COO or Exec Committee member; ASAS prohibited from retaliating against good-faith reporters",
+        "Conflict of Interest Process – employee discloses potential conflict in writing to supervisor; supervisor reviews and instructs in writing; COO maintains records; no conflicted business without COO authorization",
+        "Workplace Search Process – authorized by COO or designee; conducted by supervisor or designated security personnel; employees who refuse are subject to discipline",
+        "Gift Disclosure Process – employee reports any gift above threshold to supervisor in writing; supervisor provides written instruction; COO keeps updated records",
+        "Technology Incident (Lost/Stolen Device) – employee immediately notifies supervisor and files police report; IT notified; if device contained ASAS data, remote wipe initiated",
+      ],
+      Other: [
+        "Equal Employment Opportunity – no discrimination on basis of race, color, national origin, age, sex, sexual orientation, gender identity, disability, or other characteristic protected under federal law or Texas law; complaints may be filed with the Texas Workforce Commission Civil Rights Division (TWC-CRD) or EEOC",
+        "Immigration Enforcement Actions Policy – ASAS sites serving youth are sensitive locations under DHS guidelines; employees must not allow ICE/CBP into non-public areas without a valid warrant; document all enforcement contact and report immediately to HR",
+        "Open Door Policy – ASAS encourages employees to raise concerns directly with their supervisor; HR is available at hr@afterschoolallstars.org as an additional resource",
+        "Expected Standards of Conduct and Performance – all employees must adhere to handbook policies; ASAS may discipline, up to and including termination, for violations of standards at any time",
+        "Inspections of Desks, Packages, and Briefcases – ASAS reserves the right to inspect personal belongings, desks, files, lockers, and ASAS equipment at any time; weapons, explosives, alcohol, and illegal substances are strictly prohibited on ASAS property",
+        "General Safety Guidelines – employees must report all accidents and hazardous conditions immediately to their supervisor; ASAS provides workers' compensation coverage; incident report must be filed within 24 hours",
+        "Incident and Accident Reporting – all work-related injuries and accidents must be reported to supervisor immediately, regardless of severity; supervisor notifies HR within 24 hours; HR files workers' compensation claim",
+        "Transporting Students – personal vehicle transport of students requires prior written approval from ASAS leadership; all transportation must comply with ASAS protocols and Texas law",
+        "Rehiring of Employees – former employees with a break in service of more than 90 days are treated as new hires in all respects including introductory status and benefit accrual",
+        "Social Media Policy – no disparaging content about ASAS, students, staff, or donors; no friending/following students under 18 on personal accounts; personal accounts must not undermine ASAS mission",
+        "Confidentiality Policy – no disclosure of ASAS contracts, member data, plans, or proprietary information outside normal channels; violations may result in termination and legal action",
+        "FERPA Compliance – student education records are confidential; improper disclosure may result in withdrawal of federal funding; all student data accessed only through secure ASAS systems",
+        "Alcohol & Drug Policy – employees must not work or be on ASAS property under the influence of illegal drugs or alcohol; moderate alcohol at approved ASAS social events is permitted",
+        "Safety and Security Policy – ASAS is committed to maintaining a safe workplace; all employees must be safety-conscious at all times, report all accidents and hazards immediately, and comply with all ASAS safety protocols; ASAS provides workers' compensation coverage for Texas employees",
+        "Dress and Appearance Standards – professional dress required at all times; employees must use good judgment in determining dress, grooming, and general appearance; CROWN Act (Texas): ASAS prohibits discrimination based on hair texture and protective hairstyles (including braids, locs, twists, and knots) as an extension of race under applicable Texas and federal law",
+        "Smoke-Free Workplace – smoking permitted only in designated outside areas; cigarette butts must be properly disposed of",
+        "Solicitation Policy – solicitation for sales, collections, raffles, or organizational affiliation prohibited during work time or in work areas without prior approval",
+        "Courtesy Policy – all employees must treat colleagues, volunteers, and the public with courtesy and respect at all times",
+        "Media Requests – all media inquiries directed to designated ASAS spokesperson; employees may not speak on behalf of ASAS without authorization",
+        "Acceptance of Gifts – gifts over $50 (staff) or $150 (management) must be reported to supervisor; four exceptions apply (friendship gifts, kinship gifts, civic awards, standard discounts)",
+        "Workplace Violence – possession of weapons, explosives, or illegal substances on ASAS property is strictly prohibited",
+      ]
+    }
+  },
+  {
+    id: "finance",
+    num: "7",
+    label: "Finance",
+    subtitle: "Payroll, compensation, reimbursement, benefits, fiscal policies, and financial compliance",
+    buckets: {
+      Systems: [
+        "Paylocity – primary payroll and HR system; used for payroll processing, pay stubs, W-4, direct deposit, and employee financial records",
+        "Payroll / Paylocity / ADP – payroll processing platform; all compensation and deductions managed here",
+        "Benefits Portal – accessed at orientation; used to enroll in and manage medical, dental, vision, retirement, and disability plans",
+        "ASAS Credit Card Portal – corporate card management; issued and managed by Operations Manager",
+        "Google Maps / Mileage Tool – required for documenting and calculating mileage reimbursement requests",
+        "Adobe Sign – used to execute credit card agreements, expense authorizations, and financial policy acknowledgements",
+        "OneDrive / SharePoint – storage for all financial documents, receipts, reimbursement forms, and fiscal records",
+      ],
+      Documents: [
+        "W-4 / Tax Withholding Form – completed during onboarding in Paylocity; determines federal income tax withholding; employee responsible for keeping current",
+        "Direct Deposit Authorization – completed during onboarding; required for payroll processing; updated through Paylocity",
+        "<a href='Please_DocuSign_CREDIT_CARD_Agreement_v4 - Connie.pdf' target='_blank'>📎 ASAS Employee Credit Card Agreement</a> – signed via Adobe Sign prior to card issuance; outlines terms, responsibilities, and consequences for misuse",
+        "<a href='Please_DocuSign_CREDIT_CARD_Agreement_v4 - Connie-542e1464.pdf' target='_blank'>📎 ASAS Employee Credit Card Agreement (Updated)</a> – updated version of the credit card agreement",
+        "<a href='Employee-Acknowledgement-of-Payroll-Overpayment.docx' target='_blank'>📎 Employee Acknowledgement of Payroll Overpayment</a> – signed when employee receives and acknowledges an overpayment to be recovered",
+        "<a href='Benefits Payroll Deduction Authorization.pdf' target='_blank'>📎 Benefits Payroll Deduction Authorization</a> – authorizes deductions from employee paycheck for benefits premiums",
+        "<a href='Travel-Expense-Policy.docx' target='_blank'>📎 Travel Expense Policy</a> – full ASAS travel expense policy governing reimbursable business travel costs",
+        "<a href='ASAS Fiscal Policies FY25 2-5-25.pdf' target='_blank'>📎 ASAS Fiscal Policies FY25</a> – governing document for all ASAS financial policies and procedures; updated January 2025; all staff must comply",
+        "<a href='License Agreement - Schedule C.pdf' target='_blank'>📎 License Agreement – Schedule C</a> – coordinated reporting requirements including insurance-related data submission",
+        "Expense Reimbursement Form – submitted within 30 days of expense with itemized receipts; required for all out-of-pocket business expenses",
+        "Mileage Reimbursement Form – submitted within 30 days of travel; must include Google Maps printout with miles, origin, and destination",
+        "Travel Pre-Approval Form – required before booking any ASAS business travel; approved by supervisor",
+        "Cell Phone Reimbursement Request – submitted any time during fiscal year; approved by department head and COO",
+        "Benefits Enrollment Forms – completed at orientation; submitted to HR within enrollment window",
+        "PTO Donation Authorization Form – completed by both donor and recipient employees",
+        "Short-Term Disability Claim Form – filed when employee qualifies for disability leave benefits",
+        "Payroll Deduction Authorization – signed if employee has negative PTO balance or outstanding advances to be recovered from paycheck",
+        "Gift Disclosure Form – required for any gift over $50 (staff) or $150 (management); submitted in writing to supervisor; COO maintains records",
+        "Conflict of Interest Disclosure Form – required for any actual or potential financial conflict; COO maintains master records",
+      ],
+      SOP: [
+        "Payroll Cycle – employees paid every other Friday via direct deposit; pay period covers two weeks ending the previous Saturday; pay stubs available in Paylocity by Friday",
+        "Expense Reimbursement Process – Step 1: Employee incurs approved business expense; Step 2: Collects itemized receipts; Step 3: Completes reimbursement form within 30 days; Step 4: Submits to supervisor for approval; Step 5: Approved form sent to Operations Manager for processing",
+        "Mileage Reimbursement Process – document trip with Google Maps printout showing miles, origin, and destination; subtract normal commute mileage; submit form within 30 days of travel",
+        "Travel Booking Process – obtain supervisor approval → book lowest reasonable fare → submit pre-approval form → ASAS pre-pays hotel for trips 50+ miles from home/office; submit all receipts within 30 days",
+        "Corporate Credit Card Reconciliation – cardholders must submit all receipts and reconcile charges within required timeframe; personal charges must be reimbursed to ASAS immediately",
+        "Cell Phone Reimbursement Process – employee submits request → department head and COO approve → reimbursement added to paycheck",
+        "Benefits Enrollment – HR presents options at new hire orientation; forms completed within enrollment period; changes permitted only at open enrollment or qualifying life event",
+        "COBRA Notification – HR sends written notice within required federal timeline upon qualifying event; employee has 60 days to elect; coverage backdated to separation date",
+        "Payroll Error Correction – employee reports discrepancy to supervisor within 30 days of erroneous paycheck; HR investigates and corrects in next pay cycle",
+        "Overpayment Recovery – HR deducts from next paycheck with written authorization; if employee has separated, HR issues repayment agreement",
+        "Wage Garnishment – ASAS processes court-ordered wage garnishments as required by law; HR notifies employee per applicable requirements",
+        "Final Paycheck (Texas Payday Law) – involuntary terminations: paid within 6 calendar days; voluntary resignations: paid on next regular payday; includes all earned wages",
+        "Gift Disclosure Process – employee identifies gift above threshold → reports in writing to supervisor → supervisor provides written instruction → COO maintains records",
+        "Conflict of Interest Disclosure – employee identifies potential financial conflict → discloses in writing to supervisor → supervisor reviews and instructs → COO authorizes or prohibits the business relationship",
+      ],
+      Other: [
+        "Compensation Policy – all salaries administered by HR; performance-based increases tied to annual review and goal achievement; all increases require COO approval",
+        "Texas Payday Law – ASAS must pay wages at least twice monthly or every two weeks; involuntary terminations paid within 6 calendar days; voluntary resignations paid on next regular payday",
+        "Overtime Policy – non-exempt employees paid at 1.5x rate for hours over 40/week; all overtime must be pre-approved in writing by supervisor; unauthorized overtime is compensated but subject to discipline",
+        "PTO Accrual – 0–3 years: 18 days/yr; 3–5 years: 23 days/yr; 5+ years: 28 days/yr; accrual suspended during leave; Texas does not require PTO payout on separation",
+        "Travel Meal Per Diem – up to $50/day total; individual meals not to exceed $20/person; alcohol is never reimbursable",
+        "Hotel Cap – $250/night maximum without prior approval; department head approves trips with total cost under $1,000; COO approves trips over $1,000",
+        "Corporate Credit Card Policy – issued to select employees by Operations Manager; ASAS property; personal use strictly prohibited; all receipts required; misuse subject to termination",
+        "Acceptance of Gifts – gifts over $50 (staff) or $150 (management) must be reported to supervisor; four exceptions: friendship gifts, kinship gifts, civic awards, standard discounts/rebates",
+        "Conflicts of Interest – employees may not conduct ASAS business with outside firms where a financial conflict exists without COO authorization; all conflicts disclosed in writing",
+        "Insurance Coverage – ASAS maintains general liability insurance; chapters must comply with Schedule C reporting requirements for continued coverage eligibility",
+        "Whistleblowing – employees who believe ASAS financial practices violate state or federal law may file a written complaint with COO or Executive Committee; retaliation is prohibited",
+        "Workers Compensation – ASAS provides workers' compensation coverage for all Texas employees; Texas does not mandate private employer coverage but ASAS carries it voluntarily",
+        "Fiscal Policies – all financial activity governed by ASAS Fiscal Policies FY25; updated January 2025; employees with financial responsibilities must review and comply",
+        "Salary Increases – performance-based; tied to mid-year and annual reviews; employees on PIP are ineligible; all increases require COO approval",
+        "Benefits Overview – ASAS offers medical, dental, vision insurance; retirement plan; parental leave (6 weeks paid); short-term disability (up to 60% salary for 5 weeks); life blend flex time",
+      ],
+    }
+  },
+];
+
+const BUCKET_CONFIG = {
+  Systems:   { icon: "🖥️",  cls: "bucket-systems"   },
+  Documents: { icon: "📄",  cls: "bucket-documents"  },
+  SOP:       { icon: "📋",  cls: "bucket-sop"        },
+  Other:     { icon: "ℹ️",  cls: "bucket-other"      },
+};
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll() {
+  const nav = document.getElementById("nav");
+  const content = document.getElementById("content");
+  nav.innerHTML = '';
+  content.innerHTML = '';
+
+  sections.forEach((sec, idx) => {
+    // Sidebar button
+    const btn = document.createElement("button");
+    btn.className = "section-btn" + (idx === 0 ? " active" : "");
+    btn.dataset.id = sec.id;
+    btn.innerHTML = `<span class="num">${sec.num}</span>${sec.label}`;
+    btn.onclick = () => switchSection(sec.id);
+    nav.appendChild(btn);
+
+    // Panel
+    const panel = document.createElement("div");
+    panel.className = "section-panel" + (idx === 0 ? " active" : "");
+    panel.id = "panel-" + sec.id;
+
+    panel.innerHTML = `
+      <div class="section-header">Section ${sec.num}: ${sec.label}</div>
+      <div class="section-subtitle">${sec.subtitle}</div>
+      <div class="buckets" id="buckets-${sec.id}"></div>
+    `;
+    content.appendChild(panel);
+
+    const bucketsEl = panel.querySelector(`#buckets-${sec.id}`);
+    ["Systems","Documents","SOP","Other"].forEach(bname => {
+      const cfg = BUCKET_CONFIG[bname];
+      const items = sec.buckets[bname];
+      const bucket = document.createElement("div");
+      bucket.className = `bucket ${cfg.cls}`;
+      bucket.dataset.bucket = bname;
+
+      const hdr = document.createElement("div");
+      hdr.className = "bucket-header";
+      hdr.innerHTML = `<span class="icon">${cfg.icon}</span>${bname}<span class="count">${items.length}</span><span class="chevron">▾</span>`;
+      hdr.onclick = () => bucket.classList.toggle("collapsed");
+
+      const itemsEl = document.createElement("div");
+      itemsEl.className = "bucket-items";
+      items.forEach(text => {
+        const row = document.createElement("div");
+        row.className = "bucket-item";
+        row.innerHTML = `<span class="dot"></span><span class="item-text">${text}</span>`;
+        itemsEl.appendChild(row);
+      });
+
+      bucket.appendChild(hdr);
+      bucket.appendChild(itemsEl);
+      bucketsEl.appendChild(bucket);
+    });
+  });
+}
+
+function switchSection(id) {
+  document.querySelectorAll(".section-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+  document.querySelectorAll(".section-panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + id));
+  const sec = sections.find(s => s.id === id);
+  document.getElementById("topbar-title").textContent = `Section ${sec.num}: ${sec.label}`;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function onSearch(query) {
+  const q = query.trim().toLowerCase();
+  const words = q.split(/\s+/).filter(w => w.length > 1);
+
+  if (!q || words.length === 0) {
+    document.querySelectorAll(".bucket-item").forEach(el => {
+      el.classList.remove("hidden");
+      const textEl = el.querySelector(".item-text");
+      textEl.querySelectorAll("mark").forEach(m => m.replaceWith(m.textContent));
+    });
+    document.querySelectorAll(".bucket").forEach(b => b.classList.remove("collapsed"));
+    document.querySelectorAll(".section-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".section-btn").forEach(b => b.classList.remove("active"));
+    document.querySelector(".section-panel").classList.add("active");
+    document.querySelector(".section-btn").classList.add("active");
+    document.getElementById("topbar-title").textContent = "Section 1: Hiring";
+    return;
+  }
+
+  let firstMatch = null;
+  sections.forEach(sec => {
+    let secHasMatch = false;
+    const panel = document.getElementById("panel-" + sec.id);
+    panel.querySelectorAll(".bucket-item").forEach(el => {
+      const textEl = el.querySelector(".item-text");
+      const lo = textEl.textContent.toLowerCase();
+      // Match if ALL words appear anywhere in the text (handles plurals naturally)
+      const matches = words.every(w => lo.includes(w));
+      if (matches) {
+        el.classList.remove("hidden");
+        textEl.querySelectorAll("mark").forEach(m => m.replaceWith(m.textContent));
+        words.forEach(w => highlightNode(textEl, w));
+        secHasMatch = true;
+        if (!firstMatch) firstMatch = sec.id;
+      } else {
+        el.classList.add("hidden");
+      }
+    });
+    panel.querySelectorAll(".bucket").forEach(b => {
+      const hasVisible = [...b.querySelectorAll(".bucket-item")].some(i => !i.classList.contains("hidden"));
+      b.classList.toggle("collapsed", !hasVisible);
+    });
+    panel.classList.toggle("active", secHasMatch);
+  });
+  document.querySelectorAll(".section-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.id === firstMatch);
+  });
+  if (firstMatch) {
+    const sec = sections.find(s => s.id === firstMatch);
+    document.getElementById("topbar-title").textContent = `Search results – Section ${sec.num}: ${sec.label}`;
+  }
+}
+
+function highlightNode(node, q) {
+  // Remove existing marks first
+  node.querySelectorAll("mark").forEach(m => m.replaceWith(m.textContent));
+  // Walk text nodes and wrap matches
+  const walk = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+  const matches = [];
+  let n;
+  while ((n = walk.nextNode())) {
+    const idx = n.textContent.toLowerCase().indexOf(q);
+    if (idx !== -1) matches.push({ node: n, idx });
+  }
+  matches.reverse().forEach(({ node: n, idx }) => {
+    const after = n.splitText(idx + q.length);
+    const matched = n.splitText(idx);
+    const mark = document.createElement("mark");
+    mark.textContent = matched.textContent;
+    matched.replaceWith(mark);
+  });
+}
+
+const STORAGE_KEY = "asas_kb_highlights";
+
+function loadHighlights() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch(e) { return {}; }
+}
+
+function saveHighlights(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function applyState(item, state) {
+  const states = [null, "highlight-green", "highlight-yellow"];
+  const tags   = [null, "tag-have", "tag-need"];
+  const labels = [null, "✓ Have", "✦ Need"];
+
+  states.forEach(s => s && item.classList.remove(s));
+  const existing = item.querySelector(".highlight-tag");
+  if (existing) existing.remove();
+
+  const idx = states.indexOf(state);
+  if (idx > 0) {
+    item.classList.add(state);
+    const t = document.createElement("span");
+    t.className = `highlight-tag ${tags[idx]}`;
+    t.textContent = labels[idx];
+    item.appendChild(t);
+  }
+}
+
+function addSystemsInteractivity() {
+  const saved = loadHighlights();
+  const states = [null, "highlight-green", "highlight-yellow"];
+
+  document.querySelectorAll(".bucket").forEach((bucket, bIdx) => {
+    // Insert legend
+    const legend = document.createElement("div");
+    legend.className = "bucket-legend";
+    legend.innerHTML = `
+      <span><span class="legend-dot green"></span> Have</span>
+      <span><span class="legend-dot yellow"></span> Need</span>
+      <span class="legend-hint">Click any item to mark it</span>
+    `;
+    bucket.querySelector(".bucket-items").before(legend);
+
+    bucket.querySelectorAll(".bucket-item").forEach((item, iIdx) => {
+      const key = `b${bIdx}_i${iIdx}`;
+
+      // Restore saved state
+      if (saved[key]) applyState(item, saved[key]);
+
+      item.addEventListener("click", (e) => {
+        // Don't toggle color when clicking a link or any element inside a link
+        if (e.target.closest("a") || e.target.closest("span[data-doc]")) return;
+
+        let current = states.findIndex(s => s && item.classList.contains(s));
+        if (current === -1) current = 0;
+        const next = (current + 1) % states.length;
+        const nextState = states[next];
+
+        applyState(item, nextState);
+
+        // Persist
+        const data = loadHighlights();
+        if (nextState) { data[key] = nextState; }
+        else { delete data[key]; }
+        saveHighlights(data);
+      });
+    });
+  });
+}
+
+function highlight(text, q) {
+  const regex = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
+  return escHtml(text).replace(regex, "<mark>$1</mark>");
+}
+
+renderAll();
+addSystemsInteractivity();
+
+function downloadShareable() {
+  // Read current highlights from localStorage
+  const highlights = loadHighlights();
+
+  // Get the current HTML source
+  let html = document.documentElement.outerHTML;
+
+  // Build a JSON block of highlights to embed
+  const encoded = JSON.stringify(highlights);
+
+  // Inject an auto-apply script — S variable avoids literal tag names breaking the HTML parser
+  const S = 'script';
+  const injectScript = `<${S} id="embedded-highlights">(function(){var embedded=${encoded};window.loadHighlights=function(){return embedded;};}());<\/${S}>`;
+
+  // Insert just before the main script block
+  html = html.replace('<' + S + '>\n// ── DATA', injectScript + '\n<' + S + '>\n// ── DATA');
+
+  // Also update the title to indicate it's a shared snapshot
+  const now = new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  html = html.replace(
+    'ASAS Full-Time Employee Handbook · Updated 11/2018 v1 · Reorganized Knowledge Base',
+    `ASAS Full-Time Employee Handbook · Shared Snapshot · ${now} · HAVE/NEED labels shown`
+  );
+
+  // Download the file
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ASAS_Knowledge_Base_Shared_${now.replace(/ /g,'_').replace(/,/g,'')}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
